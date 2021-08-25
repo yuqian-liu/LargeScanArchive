@@ -1,4 +1,9 @@
 import subprocess
+import os
+
+temp_folder = 'G:\\temp'
+input_file = 'osql_input.txt'
+output_file = 'osql_output.txt'
 
 class PatientDB:
     """A class that queries the Patient Database"""
@@ -35,17 +40,40 @@ class PatientDB:
 
         return table
 
-    def get_all_large_scans(self):
-        series_list = []
-        return series_list
+    def get_all_series_frame_number(self):
+        """Get series list with frame number and patient name"""
 
-    def get_series_frame_number_scanner(self, series_iuid):
-        frameNumber = 0
+        query_str = 'select count(*), mrseries.DICOM_SERIES_INSTANCE_UID, mrseries.DICOM_PROTOCOL_NAME, ' \
+                    'patient.DICOM_PATIENT_NAME ' \
+                    'from mrimage, mrseries, patient where mrimage.Patient_OID=patient.OBJECT_OID ' \
+                    'and mrseries.OBJECT_OID=mrimage.PARENT_OID group by mrimage.PARENT_OID'
+
+        table = self._query(query_str)
+
+        frameNumber, s_iuid, patientName = zip(*table)
+
+        return frameNumber, s_iuid, patientName
+
+    def get_series_frame_number(self, series_oid):
+        """Get image numbers of a series"""
+
+        query_str = 'select count(*) from mrimage where PARENT_OID=%s group by PARENT_OID' % series_oid
+
+        table = self._query(query_str)
+
+        frameNumber = zip(*table)
+
         return frameNumber
 
-    def get_series_OID(self, series_iuid):
-        series_OID = ''
-        return series_OID
+    def get_OIDs_by_iuid(self, series_iuid):
+
+        query_str = 'select OBJECT_OID, PARENT_OID, Patient_OID from mrseries where DICOM_SERIES_INSTANCE_UID=%s' % series_iuid
+
+        table = self._query(query_str)
+
+        series_OID, PARENT_OID, Patient_OID = zip(*table)
+
+        return series_OID, PARENT_OID, Patient_OID
 
     def extract_exams(self):
         """Extract a list of all the exams in the patient database"""

@@ -5,9 +5,8 @@ import datetime
 import struct
 import zipfile
 from shutil import copyfile, copytree, rmtree
-import argparse
 import xml.etree.ElementTree as et
-import scanner_db
+from . import scanner_db
 
 # par/rec directories 
 par_rec_dir = 'G:\patch\pride\\tempinputseries\\'
@@ -17,9 +16,6 @@ dicomleacher = '"c:\Program Files (x86)\PMS\Mipnet91x64\prideimportexport_win_cs
 
 # folders and temporary files
 export_dir = 'E:\\export\\classic_series\\'
-temp_folder = 'G:\\temp'
-input_file = 'osql_input.txt'
-output_file = 'osql_output.txt'
 
 # default log file name
 default_log_file = 'G:\log\logcurrent.log'
@@ -81,12 +77,12 @@ def warning(line):
     print(before + line + after)
 
 class FileOutput:
-    XMLREC = True
-    DATALIST = True
-    LOG = True
-    LABRAW = True
+    XMLREC = False
+    DATALIST = False
+    LOG = False
+    LABRAW = False
     DICOM = True
-    SIN = True
+    SIN = False
 
         
 db = scanner_db.PatientDB()
@@ -483,46 +479,3 @@ class PhilipsExam:
                 warning('.RAW:  not found')
             
         return file_list, default_filename
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Philips Series Export Tool')
-    parser.add_argument('mrseries', help='MRSERIES_SeriesID_ExamID')
-    parser.add_argument('-o','--out', help='file output types', default='XLORDS',choices='XLORDS')
-    args = parser.parse_args()
-
-    '''
-        X = xml/rec files
-        L = data/list files
-        O = log file
-        R = lab/raw files
-        D = DICOM file
-        S = sin file
-    '''
-
-    # set output file types
-    if 'X' not in args.out:
-        FileOutput.XMLREC = False
-    if 'L' not in args.out:
-        FileOutput.DATALIST = False
-    if 'O' not in args.out:
-        FileOutput.LOG = False
-    if 'R' not in args.out:
-        FileOutput.LABRAW = False
-    if 'D' not in args.out:
-        FileOutput.DICOM = False
-    if 'S' not in args.out:
-        FileOutput.SIN = False
-
-    # extract the exam ID
-    if not args.mrseries.upper().startswith('MRSERIES'):
-        raise ValueError('mrseries must start with "MRSERIES_SeriesID_ExamID"')
-
-    mrseries = args.mrseries.split('_')
-    seriesid = examid = mrseries[1]
-    examid = mrseries[2]
-
-    plf = PhilipsLogFile()
-    pe = plf.extract_exam(examid)
-
-    export_series(pe,seriesid)
-
