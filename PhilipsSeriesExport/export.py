@@ -132,13 +132,18 @@ class PhilipsExam:
         """Generates a common filename from series information"""
 
         eid,pid,enames = db.extract_exams()
+
         sid,snames = db.extract_series(self.exam_id)
-        
+
+        s_iuid = db.get_series_iuid_by_oid(series_id)
+
         exams = dict(zip(eid,enames))
+
         series = dict(zip(sid,snames))
-        
-        return exams[self.exam_id].replace(" ","_") + '_' + series[series_id].replace(" ","_")
-    
+        #return exams[self.exam_id].replace(" ","_") + '_' + series[series_id].replace(" ","_")
+       
+        return s_iuid[0]    
+
     def extract_all_series(self):
         # find the set of series in this exam with rec data
         

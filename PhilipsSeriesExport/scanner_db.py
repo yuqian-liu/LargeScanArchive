@@ -43,17 +43,26 @@ class PatientDB:
     def get_all_series_frame_number(self):
         """Get series list with frame number and patient name"""
 
-        query_str = 'select count(*), mrseries.DICOM_SERIES_INSTANCE_UID, mrseries.DICOM_PROTOCOL_NAME, ' \
-                    'patient.DICOM_PATIENT_NAME ' \
-                    'from mrimage, mrseries, patient where mrimage.Patient_OID=patient.OBJECT_OID ' \
-                    'and mrseries.OBJECT_OID=mrimage.PARENT_OID group by mrimage.PARENT_OID'
+        query_str = 'select count(*), PARENT_OID from mrimage group by PARENT_OID'
 
         table = self._query(query_str)
 
-        frameNumber, s_iuid, patientName = zip(*table)
+        frameNumber, s_oid = zip(*table)
 
-        return frameNumber, s_iuid, patientName
+        return frameNumber, s_oid
 
+    def get_series_by_oid(self, series_oid):
+
+        query_str = 'select mrseries.DICOM_SERIES_INSTANCE_UID, mrseries.DICOM_PROTOCOL_NAME, ' \
+                    'patient.DICOM_PATIENT_NAME from mrseries, patient where mrseries.Patient_OID=patient.OBJECT_OID' \
+                    ' and mrseries.OBJECT_OID=%s' % series_oid
+        
+        table = self._query(query_str)
+        
+        s_iuid, s_desc, p_name = zip(*table)
+        
+        return s_iuid, s_desc, p_name
+        
     def get_series_frame_number(self, series_oid):
         """Get image numbers of a series"""
 
@@ -64,6 +73,15 @@ class PatientDB:
         frameNumber = zip(*table)
 
         return frameNumber
+        
+    def get_series_iuid_by_oid(self, s_oid):
+        query_str = 'select DICOM_SERIES_INSTANCE_UID from mrseries where OBJECT_OID=%s' % s_oid
+        print(query_str)
+        table = self._query(query_str)
+
+        s_iuid = zip(*table)
+        
+        return s_iuid
 
     def get_OIDs_by_iuid(self, series_iuid):
 
